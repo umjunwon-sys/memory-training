@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>인터벌 기록</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#378add">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="인터벌 기록">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+.app{--bg2:#fff;--bgn:#f1efe8;--bga:#e6f1fb;--ta:#185fa5;--fa:#378add;--fd:#e24b4a;--tp:#1f1e1c;--ts:#5f5e5a;--tm:#888780;--td:#a32d2d;--tsu:#3b6d11;--tw:#854f0b;--bd:rgba(0,0,0,.12);--bds:rgba(0,0,0,.22);--ba:#85b7eb;font-family:-apple-system,system-ui,sans-serif;color:var(--tp);max-width:520px;margin:0 auto}
+@media (prefers-color-scheme:dark){.app{--bg2:#262624;--bgn:#30302e;--bga:#0c447c;--ta:#b5d4f4;--tp:#f1efe8;--ts:#b4b2a9;--td:#f09595;--tsu:#c0dd97;--tw:#fac775;--bd:rgba(255,255,255,.14);--bds:rgba(255,255,255,.26);--ba:#378add}body{background:#1f1e1d!important}}
+body{background:#faf9f5;margin:0;padding:max(12px,env(safe-area-inset-top)) 12px 24px}
+.app button,.app select,.app input{font:inherit;font-size:16px;color:var(--tp);background:var(--bg2);border:0.5px solid var(--bds);border-radius:8px;min-height:40px;padding:0 12px;box-sizing:border-box}
+.app button{background:transparent;cursor:pointer}
+.cd{background:var(--bg2);border:0.5px solid var(--bd);border-radius:12px;padding:1rem 1.25rem;margin:0 0 1rem}
+.lb{font-size:13px;color:var(--ts);margin:0 0 4px}
+.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 12px}
+.mt{background:var(--bgn);border-radius:8px;padding:.75rem 1rem}
+.mt p{margin:0}.mv{font-size:20px;font-weight:500;font-variant-numeric:tabular-nums}
+.sub{font-size:12px;color:var(--ts);line-height:1.4;margin-top:2px!important}
+.bt{width:100%;height:52px}
+.lg{display:flex;justify-content:space-between;align-items:center;gap:8px;border-top:0.5px solid var(--bd);padding:8px 0;font-size:13px}
+.on{outline:2px solid var(--ba)}
+.hd{font-weight:500;margin:0 0 12px}
+.tg{background:var(--bga);border-radius:8px;padding:.75rem 1rem;margin:0 0 12px;font-size:14px;color:var(--ta);line-height:1.7}
+.nav{display:grid;grid-template-columns:1fr 1fr 52px;gap:8px;margin:0 0 1rem}
+.app .tab.sel{background:var(--bga);color:var(--ta);border-color:var(--ba)}
+.cg{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.cw{text-align:center;font-size:12px;color:var(--tm);padding:4px 0}
+.app .cday{min-height:42px;padding:0;position:relative;font-size:14px;border:2px solid transparent;font-variant-numeric:tabular-nums}
+.app .ctd{outline:1.5px solid var(--tp);outline-offset:-4px}
+.app .csel{border-color:var(--ba)}
+.cn{position:absolute;top:1px;right:4px;font-size:11px}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="nav"><button class="tab sel" id="t1">타이머</button><button class="tab" id="t2">기록·분석</button><button class="tab" id="t3" aria-label="달력"><i class="ti ti-calendar" style="font-size:20px" aria-hidden="true"></i></button></div>
+
+<div id="pg1">
+<div class="cd">
+<p class="lb">단계</p>
+<select id="fStage" style="width:100%;margin:0 0 6px">
+<option value="1">1 기본 유지</option>
+<option value="2">2 저강도 · 짧은 동작</option>
+<option value="3">3 저강도 · 긴 동작</option>
+<option value="4">4 기본 강도</option>
+<option value="5">5 강도 변화</option>
+<option value="6">6 자세 변화</option>
+</select>
+<p id="stDesc" class="sub" style="margin:0 0 12px"></p>
+<div class="tg" id="tgt"></div>
+<p id="state" style="text-align:center;font-size:14px;color:var(--ts);margin:0">대기 중</p>
+<p id="tm" style="font-size:44px;font-weight:500;text-align:center;margin:0 0 8px;font-variant-numeric:tabular-nums">00:00</p>
+<div class="row">
+<div class="mt" id="cAct"><p class="lb">진행 시간</p><p class="mv" id="vAct">00:00</p></div>
+<div class="mt" id="cRest"><p class="lb">휴식 시간</p><p class="mv" id="vRest">00:00</p><p class="sub" id="vSeg"></p></div>
+</div>
+<p id="ts" style="text-align:center;font-size:13px;color:var(--ts);margin:0 0 12px">휴식 0회</p>
+<div id="pIdle"><button class="bt" id="bStart">세션 시작</button></div>
+<div id="pRun"><button class="bt" id="bToggle" style="height:72px;font-size:18px;margin:0 0 12px">휴식</button><button class="bt" id="bEnd">세션 종료</button></div>
+<div id="pEnd">
+<p style="text-align:center;font-size:14px;margin:0 0 8px">어떻게 끝났나요? 누르면 저장됩니다</p>
+<div class="row"><button class="bt" id="bOk">정상 종료</button><button class="bt" id="bFail" style="color:var(--td)">조기 종료</button></div>
+<button id="bCancel" style="width:100%;font-size:13px">이 세션 기록하지 않기</button>
+</div>
+<p id="saved" style="text-align:center;font-size:13px;color:var(--tsu);margin:8px 0 0;line-height:1.6"></p>
+</div>
+<div class="cd">
+<p class="hd">최종 목표와 단계</p>
+<div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ts);margin:0 0 12px">진행 시간 목표 <input type="number" id="gGoal" min="1" max="60" step="1" style="width:72px"> 분</div>
+<div class="row">
+<div class="mt"><p class="lb">최종 목표 달성률</p><p class="mv" id="sPct">-</p></div>
+<div class="mt"><p class="lb">최고 기록</p><p class="mv" id="sBest">-</p></div>
+</div>
+<div style="height:8px;background:var(--bgn);border-radius:4px;overflow:hidden;margin:0 0 12px"><div id="bar" style="height:100%;width:0;background:var(--fa)"></div></div>
+<p id="sAdv" style="font-size:14px;margin:0;line-height:1.6"></p>
+</div>
+</div>
+
+<div id="pg2">
+<div class="cd"><p class="hd">지표 (최근 5회, 괄호는 직전 5회 대비)</p><div class="row" id="mets" style="margin:0"></div></div>
+<div class="cd"><p class="hd">마지막 세션 사이클</p><div id="cyc"></div></div>
+<div class="cd"><p class="hd">최근 14회</p><div id="chart"></div><p style="font-size:12px;color:var(--tm);margin:6px 0 0">진한 막대는 진행, 연한 막대는 휴식, 빨간 막대는 조기 종료, 점선은 최종 목표, 짧은 선은 그 세션의 목표</p></div>
+<div class="cd">
+<div style="display:flex;justify-content:space-between;align-items:center"><p style="font-weight:500;margin:0">기록 목록</p><button id="bCsv" style="font-size:13px">CSV 백업</button></div>
+<textarea id="csv" readonly style="display:none;width:100%;box-sizing:border-box;height:120px;font-size:12px;margin:8px 0 0;font-family:monospace;background:var(--bg2);color:var(--tp);border:0.5px solid var(--bd);border-radius:8px"></textarea>
+<div id="list" style="margin:8px 0 0"></div>
+</div>
+<div class="cd" id="icoCard">
+<p class="hd">앱 아이콘</p>
+<div style="display:flex;align-items:center;gap:12px;margin:0 0 12px"><canvas id="icoPrev" width="64" height="64" style="width:64px;height:64px;border-radius:14px"></canvas><p class="sub" style="margin:0">홈 화면에 설치할 때 쓰는 이미지입니다. 설치한 앱에서는 이 칸이 보이지 않습니다.</p></div>
+<div class="row" style="margin:0"><button id="bI192" style="font-size:14px">icon-192.png 저장</button><button id="bI512" style="font-size:14px">icon-512.png 저장</button></div>
+<img id="icoOut" alt="" style="display:none;width:100%;margin:12px 0 0;border-radius:12px">
+<p id="icoMsg" class="sub" style="margin:8px 0 0"></p>
+</div>
+</div>
+
+<div id="pg3">
+<div class="cd">
+<div style="display:flex;justify-content:space-between;align-items:center;margin:0 0 12px">
+<button id="cPrev" aria-label="이전 달" style="width:44px;padding:0"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
+<p id="calTitle" style="font-weight:500;margin:0;font-size:16px"></p>
+<button id="cNext" aria-label="다음 달" style="width:44px;padding:0"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
+</div>
+<div class="cg" id="calGrid"></div>
+<p class="sub" style="margin:10px 0 0">파란 날은 기록이 있는 날, 빨간 테두리는 조기 종료가 있던 날, 숫자는 그날 세션 수</p>
+</div>
+<div class="row" id="calSum"></div>
+<div class="cd" id="calDet"></div>
+</div>
+</div>
+
+<script>
+if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+const STANDALONE=(function(){try{return window.matchMedia('(display-mode: standalone)').matches||navigator.standalone===true}catch(e){return false}})();
+const K='ivl_v1';
+let S={goal:15,stage:1,logs:[]};
+try{const r=localStorage.getItem(K);if(r)S=Object.assign(S,JSON.parse(r));}catch(e){}
+function save(){try{localStorage.setItem(K,JSON.stringify(S));}catch(e){}}
+const $=id=>document.getElementById(id);
+if(STANDALONE)$('icoCard').style.display='none';
+const r1=n=>Math.round(n*10)/10,r05=x=>Math.round(x*2)/2,clamp=(x,a,b)=>Math.min(b,Math.max(a,x)),pad=n=>String(n).padStart(2,'0');
+const ds=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const today=()=>ds(new Date());
+const dd=(a,b)=>Math.round((new Date(b)-new Date(a))/864e5);
+const fmt=s=>{s=Math.max(0,Math.floor(s));return pad(Math.floor(s/60))+':'+pad(s%60)};
+const mm=m=>fmt(m*60);
+const mean=(a,f)=>{const v=a.map(f).filter(x=>x!=null&&isFinite(x));return v.length?v.reduce((s,x)=>s+x,0)/v.length:null};
+const STG=['','움직임 없이 유지. 강도가 5 아래로 떨어지면 잠깐 움직여 6–7 유지','절반 범위로 2초에 한 번 정도, 천천히','전체 범위로, 속도는 천천히','편한 기본 속도','기본 속도에 빠른 구간 섞기','자세를 바꿔 가며. 익숙해지면 휴식 대신 속도만 늦추기'];
+function go(p){[1,2,3].forEach(i=>{$('pg'+i).style.display=i===p?'block':'none';$('t'+i).classList.toggle('sel',i===p)});if(p===3)renderCal();try{window.scrollTo(0,0)}catch(e){}}
+$('t1').onclick=()=>go(1);$('t2').onclick=()=>go(2);$('t3').onclick=()=>go(3);
+$('gGoal').value=S.goal;$('fStage').value=S.stage;
+function desc(){$('stDesc').textContent=STG[S.stage]+' · 강도 7–8이면 휴식'}
+$('fStage').onchange=()=>{S.stage=+$('fStage').value;save();desc();render()};
+
+function target(){
+const L=S.logs,g=S.goal,cs=S.stage;
+if(L.length<3)return{base:true,n:L.length};
+const SL=L.filter(l=>l.stage===cs),step=t=>clamp(r05(t*0.1),0.5,2);
+let tgt,note,first=null;
+const ref3=SL.length?SL.slice(-3):L.slice(-3),f=mean(ref3,l=>l.first);
+if(!SL.length){const ref=mean(L.slice(-3),l=>l.act)||3;tgt=ref*0.7;note='새 단계는 강도가 높아지므로 직전 평균의 70%에서 시작합니다.';if(f!=null)first=r05(f*0.7)}
+else{const last=SL[SL.length-1],l3=SL.slice(-3),ok3=l3.filter(l=>!l.fail),ref=mean(ok3.length?ok3:l3,l=>l.act);
+if(last.fail){const prev=SL[SL.length-2],b=last.tgt!=null?last.tgt:ref;if(prev&&prev.fail){tgt=b*0.9;note='2회 연속 조기 종료라 목표를 10% 낮췄습니다.'}else{tgt=b;note='지난 세션이 조기 종료라 같은 목표를 다시 시도합니다.'}}
+else if(last.tgt!=null&&last.act>=last.tgt){tgt=last.tgt+step(last.tgt);note='지난 목표를 달성해서 조금 올렸습니다.'}
+else if(last.tgt!=null){tgt=last.tgt;note='지난 목표에 못 미쳐 같은 목표를 유지합니다.'}
+else{tgt=ref+step(ref);note='최근 평균보다 조금 높게 잡았습니다.'}
+if(f!=null)first=r05(f+0.5)}
+tgt=clamp(r05(tgt),1,g);if(tgt>=g)note='최종 목표 시간입니다. 이 시간을 안정적으로 유지해 보세요.';
+if(first!=null)first=Math.min(first,tgt);
+const st=mean(ref3,l=>l.st),stops=st!=null?Math.max(3,Math.ceil(st)-1):null;
+const rp=mean(ref3,l=>l.st>0&&l.rest>0?l.rest*60/l.st:null),rps=rp!=null?Math.max(30,Math.round(rp*0.9/5)*5):null;
+return{tgt,first,stops,rps,note}}
+
+let act=0,rest=0,segStart=0,mode='idle',stops=0,first=null,iv=null,wl=null,segs=[],alerted=false,T=null,hitBuzz=false,startAt=null;
+const segN=()=>segStart?(Date.now()-segStart)/1000:0;
+function cur(){const n=segN();return{a:act+(mode==='act'?n:0),r:rest+(mode==='rest'?n:0)}}
+function buzz(p){try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}}
+function showTarget(){
+const t=mode==='idle'?target():T,box=$('tgt');
+if(!t||t.base){box.innerHTML='<b style="font-weight:500">이번 세션 목표</b><br>기준선 측정 중 ('+(t?t.n:0)+'/3). 목표 없이 평소대로 하면 됩니다.';return}
+const am=cur().a/60;let h='<b style="font-weight:500">이번 세션 목표</b><br>';
+if(mode==='idle'){h+='진행 시간 '+mm(t.tgt)+' 이상<br>';
+if(t.first!=null)h+='첫 휴식은 진행 '+mm(t.first)+' 이후<br>';
+if(t.stops!=null)h+='휴식 '+t.stops+'회 이하<br>';
+if(t.rps!=null)h+='휴식 1회 '+t.rps+'초 안팎 (참고용, 강도 회복이 우선)<br>';
+h+='<span style="font-size:13px">'+t.note+'</span>'}
+else{const p=Math.min(100,am/t.tgt*100);
+h+='<div style="height:8px;background:var(--bg2);border-radius:4px;overflow:hidden;margin:6px 0"><div style="height:100%;width:'+p+'%;background:var(--fa)"></div></div>';
+h+=am>=t.tgt?'진행 '+mm(t.tgt)+' 달성. 원하면 마무리해도 됩니다.<br>':'목표까지 진행 '+fmt((t.tgt-am)*60)+' 남음<br>';
+if(t.first!=null)h+=first==null?'첫 휴식 목표: 진행 '+mm(t.first)+' 이후<br>':'첫 휴식 '+fmt(first)+' · '+(first/60>=t.first?'달성':'목표 '+mm(t.first)+' 미달')+'<br>';
+if(t.stops!=null)h+='휴식 '+stops+' / '+t.stops+'회'+(stops>t.stops?' · 초과':'')+'<br>';
+if(t.rps!=null&&mode==='rest')h+='휴식 참고 '+t.rps+'초 안팎';
+if(am>=t.tgt&&!hitBuzz){hitBuzz=true;buzz([200,100,200])}}
+box.innerHTML=h}
+function tick(){const c=cur(),n=segN();$('tm').textContent=fmt(c.a+c.r);$('vAct').textContent=fmt(c.a);$('vRest').textContent=fmt(c.r);
+$('vSeg').textContent=mode==='rest'?'이번 휴식 '+fmt(n):'';$('ts').textContent='휴식 '+stops+'회';
+$('cAct').classList.toggle('on',mode==='act');$('cRest').classList.toggle('on',mode==='rest');
+let st=mode==='act'?'진행 중 · 강도 7–8이면 휴식':mode==='rest'?'휴식 중 · 강도 3–4까지 회복':mode==='end'?'종료됨':'대기 중';
+if(mode==='rest'&&n>120){st='<span style="color:var(--tw)">휴식 2분 초과 · 다음엔 조금 더 일찍 쉬어 보세요</span>';if(!alerted){alerted=true;buzz([100,80,100])}}
+$('state').innerHTML=st;$('bToggle').textContent=mode==='rest'?'다시 시작':'휴식';showTarget()}
+function closeSeg(){const n=segN();if(mode==='act'){act+=n;segs.push(['a',n])}else if(mode==='rest'){rest+=n;segs.push(['r',n])}segStart=Date.now()}
+function panel(p){['pIdle','pRun','pEnd'].forEach(x=>$(x).style.display=x===p?'block':'none')}
+async function lock(on){try{if(on&&navigator.wakeLock)wl=await navigator.wakeLock.request('screen');else if(wl){wl.release();wl=null}}catch(e){}}
+$('bStart').onclick=()=>{T=target();act=0;rest=0;stops=0;first=null;segs=[];hitBuzz=false;startAt=new Date();segStart=Date.now();mode='act';alerted=false;iv=setInterval(tick,250);tick();panel('pRun');$('saved').innerHTML='';$('fStage').disabled=true;lock(true)};
+$('bToggle').onclick=()=>{closeSeg();if(mode==='act'){mode='rest';stops++;alerted=false;if(first==null)first=act}else mode='act';tick();buzz(60)};
+$('bEnd').onclick=()=>{closeSeg();mode='end';segStart=0;clearInterval(iv);tick();panel('pEnd')};
+function finish(fail){
+if(fail!==null){const tg=T&&!T.base?T.tgt:null,hit=tg!=null?(!fail&&act/60>=tg):null,sa=startAt||new Date();
+S.logs.push({d:ds(sa),t:pad(sa.getHours())+':'+pad(sa.getMinutes()),stage:S.stage,act:r1(act/60),rest:r1(rest/60),st:stops,first:first!=null?r1(first/60):null,fail:fail,segs:segs.map(s=>[s[0],Math.round(s[1])]),tgt:tg,hit:hit});save();
+let m='저장됨 · 진행 '+fmt(act)+' · 휴식 '+fmt(rest)+' · 휴식 '+stops+'회';
+if(tg!=null)m+='<br>'+(hit?'세션 목표 '+mm(tg)+' 달성':'<span style="color:var(--ts)">세션 목표 '+mm(tg)+' 미달 · 다음 세션도 같은 목표로 갑니다</span>');
+if(!fail&&stops===0&&S.stage<6)m+='<br><span style="color:var(--tw)">휴식 없이 끝났어요. 강도가 7–8까지 오르지 않았다면 이 단계가 쉬운 것일 수 있어요.</span>';
+$('saved').innerHTML=m}
+act=0;rest=0;stops=0;first=null;segs=[];mode='idle';T=null;startAt=null;tick();panel('pIdle');$('fStage').disabled=false;lock(false);render()}
+$('bOk').onclick=()=>finish(false);$('bFail').onclick=()=>finish(true);$('bCancel').onclick=()=>finish(null);
+$('gGoal').oninput=()=>{const g=parseInt($('gGoal').value);if(g>0){S.goal=g;save();render()}};
+$('bCsv').onclick=()=>{const c=$('csv');if(c.style.display==='none'){c.value='날짜,시각,단계,진행(분),휴식(분),휴식횟수,첫휴식(분),조기종료,세션목표(분),목표달성\n'+S.logs.map(l=>[l.d,l.t||'',l.stage,l.act,l.rest,l.st,l.first??'',l.fail?'Y':'N',l.tgt??'',l.hit==null?'':l.hit?'Y':'N'].join(',')).join('\n');c.style.display='block';$('bCsv').textContent='닫기'}else{c.style.display='none';$('bCsv').textContent='CSV 백업'}};
+
+function card(label,val,sub){return '<div class="mt"><p class="lb">'+label+'</p><p class="mv">'+val+'</p>'+(sub?'<p class="sub">'+sub+'</p>':'')+'</div>'}
+function delta(c,p,up,dec,unit){if(c==null||p==null)return '';const d=c-p,f=Math.pow(10,dec),v=Math.round(d*f)/f;if(v===0)return '<span style="font-size:13px;color:var(--ts)">(변화 없음)</span>';const good=up?d>0:d<0;return '<span style="font-size:13px;color:'+(good?'var(--tsu)':'var(--td)')+'">('+(v>0?'+':'')+v+unit+')</span>'}
+function M(label,f,up,dec,unit,rec,prv,note){const c=mean(rec,f),p=mean(prv,f),k=Math.pow(10,dec);return card(label,(c==null?'-':Math.round(c*k)/k+unit)+' '+delta(c,p,up,dec,unit),note)}
+function logLine(l){return l.stage+'단계 · 진행 '+l.act+'분 · 휴식 '+(l.rest||0)+'분 · '+l.st+'회'+(l.tgt!=null?' · 목표 '+l.tgt+'분 '+(l.hit?'<span style="color:var(--tsu)">달성</span>':'미달'):'')+(l.fail?' · <span style="color:var(--td)">조기 종료</span>':'')}
+function delBtns(){document.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{if(b.dataset.c){S.logs.splice(+b.dataset.i,1);save();render();if($('pg3').style.display==='block')renderCal()}else{b.dataset.c='1';b.textContent='확인';b.style.color='var(--td)';setTimeout(()=>{if(b.isConnected){delete b.dataset.c;b.textContent='삭제';b.style.color=''}},3000)}})}
+
+function render(){
+const L=S.logs,g=S.goal,rec=L.slice(-5),prv=L.slice(-10,-5);
+const avg=mean(rec,l=>l.act)||0,ok=L.filter(l=>!l.fail),best=ok.length?Math.max(...ok.map(l=>l.act)):0;
+const pct=Math.min(100,Math.round(avg/g*100));
+$('sPct').textContent=rec.length?pct+'%':'-';$('bar').style.width=(rec.length?pct:0)+'%';$('sBest').textContent=best?r1(best)+'분':'-';
+const cs=S.stage,need=Math.min(15,g),same=L.filter(l=>l.stage===cs).slice(-3);
+const okS=l=>!l.fail&&l.st<=3&&(l.st>=1||cs===6)&&l.act>=need,passN=same.filter(okS).length;
+let adv;
+if(!L.length)adv='단계를 고르고 세션 시작을 누르세요. 첫 3회는 기준선 측정입니다.';
+else if(passN===3&&same.length===3)adv='<span style="color:var(--tsu)">'+cs+'단계 기준 통과. '+(cs<6?(cs+1)+'단계로 올려 보세요.':'휴식 대신 속도 조절만으로 유지해 보세요.')+'</span>';
+else adv=cs+'단계 진행 중. 다음 단계 기준: 같은 단계에서 3회 연속 진행 '+need+'분 이상, 휴식 1–3회'+(cs===6?'(0회 가능)':'')+', 조기 종료 없음 ('+passN+'/3)';
+const z=same.filter(l=>!l.fail&&l.st===0).length;if(cs<6&&z>=2)adv+='<br><span style="color:var(--tw)">최근 휴식 없는 세션이 '+z+'회예요. 휴식 없는 세션은 단계 통과에 세지 않습니다. 이 단계가 쉬우면 다음 단계로 올려 보세요.</span>';
+$('sAdv').innerHTML=adv;
+let h='';
+h+=M('평균 진행 시간',l=>l.act,true,1,'분',rec,prv,'가장 중요한 기록');
+h+=M('세션 목표 달성률',l=>l.tgt!=null?(l.hit?100:0):null,true,0,'%',rec,prv,'60–80%면 난이도가 적당한 수준');
+if(L.length>=6){const b=mean(L.slice(0,3),l=>l.act);h+=card('기준선 대비',b?r1(avg/b)+'배':'-','처음 3회 평균 '+(b?r1(b):'-')+'분 기준')}else h+=card('기준선 대비','-','6회 이상 기록되면 표시');
+const tr=L.slice(-10);if(tr.length>=4){const n=tr.length,xm=(n-1)/2,ym=mean(tr,l=>l.act);let a=0,b=0;tr.forEach((l,i)=>{a+=(i-xm)*(l.act-ym);b+=(i-xm)*(i-xm)});const sl=r1(a/b);h+=card('추세',(sl>0?'+':'')+sl+'분/회','최근 '+n+'회 기울기, 양수면 상승세')}else h+=card('추세','-','4회 이상 기록되면 표시');
+h+=M('첫 휴식까지 진행',l=>l.first,true,1,'분',rec,prv,'강도가 8까지 오르는 데 걸리는 시간');
+h+=M('휴식 1회 평균',l=>l.st>0&&l.rest>0?l.rest*60/l.st:null,false,0,'초',rec,prv,'강도 회복 속도, 보통 30–60초');
+h+=M('휴식 빈도',l=>l.act>0?l.st/l.act*10:null,false,1,'회',rec,prv,'진행 10분당 휴식 횟수');
+h+=M('휴식 비율',l=>(l.act+l.rest)>0?l.rest/(l.act+l.rest)*100:null,false,0,'%',rec,prv,'전체 세션 중 쉰 시간 비율');
+h+=M('조기 종료율',l=>l.fail?100:0,false,0,'%',rec,prv,'목표 전에 끝난 세션 비율');
+const wk=L.filter(l=>dd(l.d,today())<7).length;
+h+=card('최근 7일 세션',wk+'회','<span style="color:'+(wk>=3&&wk<=4?'var(--tsu)':'var(--ts)')+'">권장 주 3–4회</span>');
+$('mets').innerHTML=h;
+const last=L[L.length-1];
+if(last&&last.segs&&last.segs.length){const tot=last.segs.reduce((s,x)=>s+x[1],0)||1;
+let out='<div style="display:flex;height:20px;border-radius:4px;overflow:hidden;margin:0 0 8px">'+last.segs.map(s=>'<div style="width:'+(s[1]/tot*100)+'%;background:'+(s[0]==='a'?'var(--fa)':'var(--bga)')+'"></div>').join('')+'</div>',k=0;
+for(let i=0;i<last.segs.length;i++){if(last.segs[i][0]==='a'){k++;const r=last.segs[i+1]&&last.segs[i+1][0]==='r'?last.segs[i+1][1]:null;out+='<div class="lg" style="padding:6px 0"><span>'+k+'회차</span><span>진행 '+fmt(last.segs[i][1])+(r!=null?' · 휴식 '+fmt(r):'')+'</span></div>'}}
+const as=last.segs.filter(s=>s[0]==='a').map(s=>s[1]);if(as.length>=3)out+='<p class="sub" style="margin:8px 0 0">'+(as[as.length-2]<as[0]?'뒤 회차일수록 진행 시간이 짧아지는 건 강도가 누적되기 때문이라 정상입니다. 이 감소폭이 줄어드는지 보세요.':'뒤 회차에도 진행 시간이 잘 유지되고 있습니다.')+'</p>';
+$('cyc').innerHTML=out}else $('cyc').innerHTML='<p style="font-size:13px;color:var(--tm);margin:0">세션을 기록하면 회차별 진행과 휴식이 표시됩니다.</p>';
+const C=L.slice(-14),W=340,H=150,mx=Math.max(g,...C.map(l=>l.act+(l.rest||0)),1)*1.1,bw=C.length?Math.min(20,(W-30)/C.length-4):0,gy=H-g/mx*H;
+let s='<svg viewBox="0 0 '+W+' '+(H+18)+'" width="100%" role="img"><title>진행과 휴식 시간 막대 그래프</title>';
+C.forEach((l,i)=>{const ha=l.act/mx*H,hr=(l.rest||0)/mx*H,x=28+i*((W-30)/C.length);
+s+='<rect x="'+x+'" y="'+(H-ha-hr)+'" width="'+bw+'" height="'+hr+'" style="fill:var(--bga)"/><rect x="'+x+'" y="'+(H-ha)+'" width="'+bw+'" height="'+ha+'" style="fill:'+(l.fail?'var(--fd)':'var(--fa)')+'"/><text x="'+(x+bw/2)+'" y="'+(H+13)+'" font-size="11" text-anchor="middle" style="fill:var(--tm)">'+l.d.slice(8)+'</text>';
+if(l.tgt!=null){const ty=H-l.tgt/mx*H;s+='<line x1="'+(x-2)+'" x2="'+(x+bw+2)+'" y1="'+ty+'" y2="'+ty+'" style="stroke:var(--tp)" stroke-width="2"/>'}});
+s+='<line x1="24" x2="'+W+'" y1="'+gy+'" y2="'+gy+'" style="stroke:var(--tsu)" stroke-dasharray="4 3" stroke-width="1"/><text x="0" y="'+(gy+4)+'" font-size="11" style="fill:var(--tsu)">'+g+'</text>';
+if(!C.length)s+='<text x="'+W/2+'" y="'+H/2+'" font-size="13" text-anchor="middle" style="fill:var(--tm)">기록이 쌓이면 그래프가 표시됩니다</text>';
+$('chart').innerHTML=s+'</svg>';
+$('list').innerHTML=L.slice().reverse().map((l,i)=>'<div class="lg"><div><span style="font-weight:500">'+l.d.slice(5)+(l.t?' '+l.t:'')+'</span> · '+logLine(l)+'</div><button data-i="'+(L.length-1-i)+'" style="border:none;min-height:32px;font-size:13px;flex-shrink:0">삭제</button></div>').join('')||'<p style="font-size:13px;color:var(--tm);margin:0">아직 기록이 없습니다.</p>';
+delBtns();showTarget()}
+
+const nowD=new Date();let calY=nowD.getFullYear(),calM=nowD.getMonth(),calSel=today();
+$('cPrev').onclick=()=>{calM--;if(calM<0){calM=11;calY--}renderCal()};
+$('cNext').onclick=()=>{calM++;if(calM>11){calM=0;calY++}renderCal()};
+function renderCal(){
+const L=S.logs,by={};L.forEach((l,i)=>{(by[l.d]=by[l.d]||[]).push(i)});
+const sd=new Date(calY,calM,1).getDay(),days=new Date(calY,calM+1,0).getDate(),pre=calY+'-'+pad(calM+1)+'-';
+$('calTitle').textContent=calY+'년 '+(calM+1)+'월';
+let h='';['일','월','화','수','목','금','토'].forEach(w=>h+='<div class="cw">'+w+'</div>');
+for(let i=0;i<sd;i++)h+='<div></div>';
+for(let d=1;d<=days;d++){const k=pre+pad(d),a=by[k];let st='';
+if(a){st='background:var(--fa);color:#fff;';if(a.some(i=>L[i].fail))st+='border-color:var(--fd);'}
+h+='<button class="cday'+(k===today()?' ctd':'')+(k===calSel?' csel':'')+'" data-day="'+k+'" style="'+st+'">'+d+(a&&a.length>1?'<span class="cn">'+a.length+'</span>':'')+'</button>'}
+$('calGrid').innerHTML=h;
+document.querySelectorAll('[data-day]').forEach(b=>b.onclick=()=>{calSel=b.dataset.day;renderCal()});
+const mL=L.filter(l=>l.d.startsWith(pre)),mDays=new Set(mL.map(l=>l.d)).size;
+const wks=Math.max(1,Math.ceil((calY===nowD.getFullYear()&&calM===nowD.getMonth()?nowD.getDate():days)/7));
+$('calSum').innerHTML=card('이번 달 세션',mDays+'일 · '+mL.length+'회','주 평균 '+r1(mL.length/wks)+'회 (권장 3–4회)')+card('이번 달 평균 진행',mL.length?r1(mean(mL,l=>l.act))+'분':'-','조기 종료 '+mL.filter(l=>l.fail).length+'회');
+const sel=by[calSel]||[];const p=calSel.split('-');
+$('calDet').innerHTML='<p class="hd" style="margin:0 0 8px">'+(+p[1])+'월 '+(+p[2])+'일</p>'+(sel.length?sel.map(i=>{const l=L[i];return '<div class="lg"><div>'+(l.t?'<span style="font-weight:500">'+l.t+'</span> · ':'')+logLine(l)+'</div><button data-i="'+i+'" style="border:none;min-height:32px;font-size:13px;flex-shrink:0">삭제</button></div>'}).join(''):'<p style="font-size:13px;color:var(--tm);margin:0">이날은 기록이 없습니다.</p>');
+delBtns()}
+
+function drawIcon(c){const x=c.getContext('2d'),s=c.width;x.clearRect(0,0,s,s);x.fillStyle='#378add';x.beginPath();x.roundRect?x.roundRect(0,0,s,s,s*0.22):x.rect(0,0,s,s);x.fill();
+x.strokeStyle='#ffffff';x.lineWidth=s*0.07;x.lineCap='round';x.beginPath();x.arc(s/2,s*0.54,s*0.27,0,Math.PI*2);x.stroke();
+x.beginPath();x.moveTo(s/2,s*0.54);x.lineTo(s/2,s*0.39);x.moveTo(s/2,s*0.54);x.lineTo(s*0.6,s*0.6);x.stroke();
+x.beginPath();x.moveTo(s*0.43,s*0.16);x.lineTo(s*0.57,s*0.16);x.stroke()}
+drawIcon($('icoPrev'));
+function saveIcon(n){const c=document.createElement('canvas');c.width=c.height=n;drawIcon(c);const url=c.toDataURL('image/png');
+try{const a=document.createElement('a');a.href=url;a.download='icon-'+n+'.png';document.body.appendChild(a);a.click();a.remove()}catch(e){}
+$('icoOut').src=url;$('icoOut').style.display='block';$('icoMsg').textContent='저장이 안 되면 위 이미지를 길게 눌러 저장하고 파일 이름을 icon-'+n+'.png로 바꾸세요.'}
+$('bI192').onclick=()=>saveIcon(192);$('bI512').onclick=()=>saveIcon(512);
+
+desc();panel('pIdle');go(1);tick();render();
+</script>
+</body>
+</html>
